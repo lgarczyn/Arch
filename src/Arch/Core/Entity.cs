@@ -255,7 +255,7 @@ public readonly struct Entity : IEquatable<Entity>, IComparable<Entity>
 ///     represents a reference to an <see cref="Entity"/> and its Version.
 /// </summary>
 [SkipLocalsInit]
-public readonly struct EntityReference
+public readonly struct EntityReference: IEquatable<EntityReference>, IComparable<EntityReference>
 {
 
     /// <summary>
@@ -343,6 +343,18 @@ public readonly struct EntityReference
     public override bool Equals(object? obj)
     {
         return obj is EntityReference other && Equals(other);
+    }
+
+    /// <summary>
+    ///     Compares this <see cref="EntityReference"/> instance to another one for sorting and ordering.
+    ///     <remarks>Orders them by id, world and version. Ascending.</remarks>
+    /// </summary>
+    /// <param name="other">The other <see cref="EntityReference"/>.</param>
+    /// <returns>A int indicating their order.</returns>
+
+    public int CompareTo(EntityReference other)
+    {
+        return Entity.CompareTo(other.Entity) != 0 ? Entity.CompareTo(other.Entity) : Version.CompareTo(other.Version);
     }
 
     /// <summary>
