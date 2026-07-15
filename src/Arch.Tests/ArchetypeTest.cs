@@ -214,6 +214,37 @@ public sealed class ArchetypeTest
     }
 
     /// <summary>
+    ///     Checks that <see cref="Archetype.Version"/> advances whenever <see cref="Entity"/>s enter or leave,
+    ///     including a same-count remove-then-add swap where <see cref="Archetype.EntityCount"/> ends unchanged.
+    /// </summary>
+    [Test]
+    public void Version()
+    {
+        var archetype = new Archetype(_group, _baseChunkSize, _baseChunkEntityCount);
+
+        var initial = archetype.Version;
+        archetype.Add(new Entity(1, 0), out _, out var firstSlot);
+        var afterFirstAdd = archetype.Version;
+        That(afterFirstAdd, Is.GreaterThan(initial));
+
+        archetype.Add(new Entity(2, 0), out _, out _);
+        var afterSecondAdd = archetype.Version;
+        That(afterSecondAdd, Is.GreaterThan(afterFirstAdd));
+
+        // Same-count swap: remove one and add one. EntityCount returns to 2 but Version must still advance.
+        var countBefore = archetype.EntityCount;
+        archetype.Remove(firstSlot, out _);
+        archetype.Add(new Entity(3, 0), out _, out _);
+        That(archetype.EntityCount, Is.EqualTo(countBefore));
+        That(archetype.Version, Is.GreaterThan(afterSecondAdd));
+
+        // Clearing a non-empty archetype advances the version too.
+        var beforeClear = archetype.Version;
+        archetype.Clear();
+        That(archetype.Version, Is.GreaterThan(beforeClear));
+    }
+
+    /// <summary>
     ///     Checks if a copy operation between <see cref="Archetype"/> was successful.
     ///     This is checked by value equality of the items and their correct order.
     /// </summary>

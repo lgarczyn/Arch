@@ -381,10 +381,31 @@ public sealed partial class Archetype
     /// <summary>
     ///     The number of <see cref="Arch.Core.Entity"/>s in this <see cref="Archetype"/>.
     /// </summary>
+    private int _entityCount;
+
     public int EntityCount
     {
+        get => _entityCount;
+        internal set
+        {
+            // Version advances on every write to the population, so an unchanged
+            // Version proves the entity set of this archetype is unchanged.
+            // Bumping in the setter makes it impossible for any add, remove, move
+            // or bulk restore path to change the population without advancing it.
+            Version++;
+            _entityCount = value;
+        }
+    }
+
+    /// <summary>
+    ///     A monotonically increasing version that changes whenever <see cref="Arch.Core.Entity"/>s enter or leave this <see cref="Archetype"/>.
+    ///     If the value is unchanged between two observations, the set of <see cref="Arch.Core.Entity"/>s in this <see cref="Archetype"/> is unchanged.
+    ///     This makes it a cheap structural-change signal for change detection over a query, without materialising or hashing the entities themselves.
+    /// </summary>
+    public long Version
+    {
         get;
-        internal set;
+        private set;
     }
 
     /// <summary>
